@@ -1,0 +1,105 @@
+#
+#Github https://github.com/MCGameSK/Horse-Flute
+#
+
+
+
+import:
+    org.bukkit.inventory.ItemFlag
+
+
+
+options:
+    FluteTag: 360211
+
+
+
+on load:
+    set {flute} to nautilus shell of fortune named "&6&l말 피리" with lore "&r " and "&8&o우클릭으로 말을 설정하고 부를수 있다" and "&r "
+    set custom model data of {flute} to {@FluteTag}
+    set {_meta} to {flute}.getItemMeta()
+    {_meta}.addItemFlags([ItemFlag.HIDE_ENCHANTS])
+    {flute}.setItemMeta({_meta})
+
+
+
+on join:
+    delete {calling::%player's uuid%}
+
+
+
+on right click on horse with priority normal:
+    if 1 of event-item is {flute}:
+        cancel event
+
+        if scoreboard tags of clicked entity is set:
+            message "&c이미 설정된 말입니다" to player
+        else:
+            set scoreboard tags of clicked entity to "%player's uuid%"
+            message "&a이제 이 말은 당신이 부르면 올 것입니다." to player
+
+
+
+on right click with priority high:
+    if 1 of event-item is {flute}:
+        cancel event
+
+        if {calling::%player's uuid%} is set:
+            message "&c말이 오고 있습니다!"
+            exit
+        set {calling::%player's uuid%} to true
+
+        set {_exist} to false
+        set {_horse} to 0
+        set {_loc} to player's location
+        loop all horses:
+            if scoreboard tags of loop-horse is "%player's uuid%":
+                set {_exist} to true
+                set {_horse} to loop-horse
+
+        if {_exist} is false:
+            message "&c부를수 있는 말이 없습니다!" to player
+        else:
+            play sound "block.note_block.flute" with volume 2 and pitch 1.2 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1.2 at player
+            wait for 0.3 seconds
+            play sound "block.note_block.flute" with volume 2 and pitch 1.6 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1.6 at player
+            wait for 0.15 seconds
+            play sound "block.note_block.flute" with volume 2 and pitch 1.5 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1.5 at player
+            wait for 0.15 seconds
+            play sound "block.note_block.flute" with volume 2 and pitch 1.2 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1.2 at player
+            wait for 0.3 seconds
+            play sound "block.note_block.flute" with volume 2 and pitch 1 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1 at player
+            wait for 0.3 seconds
+            play sound "block.note_block.flute" with volume 2 and pitch 1.2 at player
+            play sound "block.note_block.guitar" with volume 0.6 and pitch 1.2 at player
+
+            wait for 0.6 seconds
+
+            play sound "entity.generic.explode" with volume 0.4 and pitch 1.2 at {_loc}
+            play sound "entity.firework_rocket.launch" with volume 2 and pitch 1.2 at {_loc}
+
+            teleport {_horse} to {_loc}
+
+            show large explosion at {_loc}
+            loop 12 times:
+                set {_effLoc} to {_loc}
+                add random number between -1 and 1 to x-coord of {_effLoc}
+                add random number between 0 and 1.5 to y-coord of {_effLoc}
+                add random number between -1 and 1 to z-coord of {_effLoc}
+                show cloud at {_effLoc}
+        
+        delete {calling::%player's uuid%}
+
+
+
+command /hfGive:
+    trigger:
+        if player is op:
+            give player {flute}
+        else:
+            message "&cOP required"
