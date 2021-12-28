@@ -83,6 +83,7 @@ on right click with priority high:
             play sound "entity.generic.explode" with volume 0.4 and pitch 1.2 at {_loc}
             play sound "entity.firework_rocket.launch" with volume 2 and pitch 1.2 at {_loc}
 
+            dismount any passenger from {_horse}
             teleport {_horse} to {_loc}
 
             show large explosion at {_loc}
