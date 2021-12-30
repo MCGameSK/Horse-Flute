@@ -11,6 +11,7 @@ import:
 
 options:
     FluteTag: 360211
+    StableTag: 360212
 
 
 
@@ -20,6 +21,12 @@ on load:
     set {_meta} to {flute}.getItemMeta()
     {_meta}.addItemFlags([ItemFlag.HIDE_ENCHANTS])
     {flute}.setItemMeta({_meta})
+
+    set {stable} to leather horse armor of fortune named "&7&l마구간 설정" with lore "&r " and "&8&o우클릭한 위치를 말의 안식처로 결정합니다" and "&r "
+    set custom model data of {stable} to {@StableTag}
+    set {_meta} to {stable}.getItemMeta()
+    {_meta}.addItemFlags([ItemFlag.HIDE_ENCHANTS])
+    {stable}.setItemMeta({_meta})
 
 
 
@@ -43,6 +50,10 @@ on right click on horse with priority normal:
 on right click with priority high:
     if 1 of event-item is {flute}:
         cancel event
+
+        if {stableLoc::%player's uuid%} is not set:
+            message "&c마구간을 설정해야합니다."
+            exit
 
         if {calling::%player's uuid%} is set:
             message "&c말이 오고 있습니다!"
@@ -96,11 +107,63 @@ on right click with priority high:
         
         delete {calling::%player's uuid%}
 
+    else if 1 of event-item is {stable}:
+        cancel event
+
+        if event-block is not set:
+            message "&c설정할 위치를 보고 우클릭하세요." to player
+            exit
+
+        remove {stable} from player's inventory
+
+        if {stableLoc::%player's uuid%} is not set:
+            set {stableLoc::%player's uuid%} to event-location
+            {stableLoc::%player's uuid%}.getChunk().setForceLoaded(true)
+            
+            message "&a새로운 마구간이 설정되었습니다." to player
+        else:
+            {stableLoc::%player's uuid%}.getChunk().setForceLoaded(false)
+
+            set {stableLoc::%player's uuid%} to event-location
+            {stableLoc::%player's uuid%}.getChunk().setForceLoaded(true)
+
+            message "&a마구간을 옮겼습니다." to player
+
+        loop all entities:
+            if loop-entity is armor stand:
+                if loop-entity has scoreboard tag "stable%player's uuid%":
+                    kill loop-entity
+
+        set {_loc} to {stableLoc::%player's uuid%}
+        add 2 to y-coord of {_loc}
+
+        spawn armor stand at {_loc}
+        set gravity of last spawned armor stand to false
+        last spawned armor stand.setMarker(true)
+        last spawned armor stand.setVisible(false)
+        last spawned armor stand.setCustomName("&7%player%&7&l의 마구간")
+        last spawned armor stand.setCustomNameVisible(true)
+        set scoreboard tags of last spawned armor stand to "stable%player's uuid%"
+
+        
+
+every 1 seconds:
+    loop all players:
+        if {stableLoc::%loop-player's uuid%} is set:
+            loop all horses:
+                if scoreboard tags of loop-horse is "%loop-player's uuid%":
+                    if distance between {stableLoc::%loop-player's uuid%} and loop-horse > 10:
+                        if distance between loop-horse and loop-player > 50:
+                            set {_groundLoc} to {stableLoc::%loop-player's uuid%}
+                            add 1 to y-coord of {_groundLoc}
+                            teleport loop-horse to {_groundLoc}
+
 
 
 command /hfGive:
     trigger:
         if player is op:
             give player {flute}
+            give player {stable}
         else:
             message "&cOP required"
