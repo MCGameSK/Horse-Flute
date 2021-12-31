@@ -14,5 +14,5 @@
  
 플레이어가 나가거나 월드가 바뀌면 말이 마구간으로 돌아갑니다.   
 
-/hfGive  (op)아이템 지급
+/hfGive  (op)아이템 지급   
 /hfRemoveStable  마구간 삭제
