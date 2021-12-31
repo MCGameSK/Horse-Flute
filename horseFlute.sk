@@ -35,6 +35,26 @@ on join:
 
 
 
+on quit:
+    if {stableLoc::%player's uuid%} is set:
+        loop all horses:
+            if scoreboard tags of loop-horse is player's uuid:
+                set {_groundLoc} to {stableLoc::%player's uuid%}
+                add 1 to y-coord of {_groundLoc}
+                teleport loop-horse to {_groundLoc}
+
+
+
+on player world change:
+    if {stableLoc::%player's uuid%} is set:
+        loop all horses:
+            if scoreboard tags of loop-horse is player's uuid:
+                set {_groundLoc} to {stableLoc::%player's uuid%}
+                add 1 to y-coord of {_groundLoc}
+                teleport loop-horse to {_groundLoc}
+
+
+
 on right click on horse with priority normal:
     if 1 of event-item is {flute}:
         cancel event
@@ -42,7 +62,7 @@ on right click on horse with priority normal:
         if scoreboard tags of clicked entity is set:
             message "&c이미 설정된 말입니다" to player
         else:
-            set scoreboard tags of clicked entity to "%player's uuid%"
+            set scoreboard tags of clicked entity to player's uuid
             message "&a이제 이 말은 당신이 부르면 올 것입니다." to player
 
 
@@ -52,11 +72,11 @@ on right click with priority high:
         cancel event
 
         if {stableLoc::%player's uuid%} is not set:
-            message "&c마구간을 설정해야합니다."
+            message "&c마구간을 설정해야합니다." to player
             exit
 
         if {calling::%player's uuid%} is set:
-            message "&c말이 오고 있습니다!"
+            message "&c말이 오고 있습니다!" to player
             exit
         set {calling::%player's uuid%} to true
 
@@ -64,7 +84,7 @@ on right click with priority high:
         set {_horse} to 0
         set {_loc} to player's location
         loop all horses:
-            if scoreboard tags of loop-horse is "%player's uuid%":
+            if scoreboard tags of loop-horse is player's uuid:
                 set {_exist} to true
                 set {_horse} to loop-horse
 
@@ -122,7 +142,14 @@ on right click with priority high:
             
             message "&a새로운 마구간이 설정되었습니다." to player
         else:
-            {stableLoc::%player's uuid%}.getChunk().setForceLoaded(false)
+            set {_overlap} to false
+            loop {stableLoc::*}:
+                if loop-index is not player's uuid:
+                    if loop-value.getChunk() is {stableLoc::%player's uuid%}.getChunk():
+                        set {_overlap} to true
+
+            if {_overlap} is false:
+                {stableLoc::%player's uuid%}.getChunk().setForceLoaded(false)
 
             set {stableLoc::%player's uuid%} to event-location
             {stableLoc::%player's uuid%}.getChunk().setForceLoaded(true)
@@ -151,8 +178,8 @@ every 1 seconds:
     loop all players:
         if {stableLoc::%loop-player's uuid%} is set:
             loop all horses:
-                if scoreboard tags of loop-horse is "%loop-player's uuid%":
-                    if distance between {stableLoc::%loop-player's uuid%} and loop-horse > 10:
+                if scoreboard tags of loop-horse is loop-player's uuid:
+                    if distance between {stableLoc::%loop-player's uuid%} and loop-horse > 4:
                         if distance between loop-horse and loop-player > 50:
                             set {_groundLoc} to {stableLoc::%loop-player's uuid%}
                             add 1 to y-coord of {_groundLoc}
@@ -167,3 +194,30 @@ command /hfGive:
             give player {stable}
         else:
             message "&cOP required"
+
+
+
+command /hfRemoveStable:
+    trigger:
+        if {stableLoc::%player's uuid%} is set:
+
+            loop all entities:
+                if loop-entity is armor stand:
+                    if loop-entity has scoreboard tag "stable%player's uuid%":
+                        kill loop-entity
+
+            set {_overlap} to false
+            loop {stableLoc::*}:
+                if loop-index is not player's uuid:
+                    if loop-value.getChunk() is {stableLoc::%player's uuid%}.getChunk():
+                        set {_overlap} to true
+
+            if {_overlap} is false:
+                {stableLoc::%player's uuid%}.getChunk().setForceLoaded(false)
+
+            delete {stableLoc::%player's uuid%}
+
+            message "&a마구간을 삭제했습니다."
+
+        else:
+            message "&c삭제할 마구간이 없습니다."
